@@ -62,7 +62,7 @@ File structure of ```./res```
 ```noiseless.ply``` is noiseless point cloud sampled from raw point cloud
 
 #### Example for clean_100k
-![Image](./clean_100k_eg.png)
+![Image](https://github-1253353217.cos.ap-beijing.myqcloud.com/clean_100k_eg.png)
 
 
 ### Show annotation
@@ -72,4 +72,4 @@ python show_annotation.py -i ./res/2-l
 
 #### Example for annotation
 
-![Image](./annotations.png)
+![Image](https://github-1253353217.cos.ap-beijing.myqcloud.com/annotations.png)
