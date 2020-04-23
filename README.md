@@ -53,7 +53,7 @@ File structure of ```./res```
 ```
 ```info.txt``` is basic info for this 3D shape
 
-```annotation.txt``` is info for anootations
+```annotation.txt``` is info for annotations
 
 ```clean_*k.ply``` is point cloud sampled from reconstructed mesh
 
