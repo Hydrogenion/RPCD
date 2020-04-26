@@ -114,6 +114,7 @@ class RPCDPrepreocess():
         self.reconstructed_mesh = self.reconstructed_mesh.remove_duplicated_vertices()
         self.reconstructed_mesh = self.reconstructed_mesh.remove_non_manifold_edges()
         # self.reconstructed_mesh = self.reconstructed_mesh.merge_close_vertices(0.5)
+        
 
     def down_sample_to_100k_10k_1k_from_mesh(self):
         down_sample_100k = self.reconstructed_mesh.sample_points_poisson_disk(100000)
@@ -129,11 +130,11 @@ class RPCDPrepreocess():
         self.voxel_down_sample(2/10)
         voxel_size = 2
         while np.asarray(tmp_pc.points).shape[0]>500:
-            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>100000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<100000:
+            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>100000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<=100000:
                 self.sample_point_clouds_from_point_cloud.append(self.sample_point_clouds_tmp[-2])
-            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>10000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<10000:
+            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>10000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<=10000:
                 self.sample_point_clouds_from_point_cloud.append(self.sample_point_clouds_tmp[-2])
-            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>1000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<1000:
+            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>1000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<=1000:
                 self.sample_point_clouds_from_point_cloud.append(self.sample_point_clouds_tmp[-2])
             self.voxel_down_sample(voxel_size/10)
             tmp_pc = self.sample_point_clouds_tmp[-1]
