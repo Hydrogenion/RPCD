@@ -248,7 +248,6 @@ class RPCDPrepreocess():
             green_print(f'Down sampling from point cloud finished, cost {(datetime.datetime.now()-start).seconds}s')
             logging.info(f'Down sampling from point cloud finished, cost {(datetime.datetime.now()-start).seconds}s')
         except:
-            self.down_sample_to_100k_10k_1k_from_pointcloud()
             red_print('Down sampling error')
             logging.warning("Down sampling error")
         
