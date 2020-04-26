@@ -130,15 +130,22 @@ class RPCDPrepreocess():
         self.voxel_down_sample(2/10)
         voxel_size = 2
         while np.asarray(tmp_pc.points).shape[0]>500:
-            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>100000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<=100000:
+            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>=100000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<100000:
                 self.sample_point_clouds_from_point_cloud.append(self.sample_point_clouds_tmp[-2])
-            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>10000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<=10000:
+            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>=10000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<10000:
                 self.sample_point_clouds_from_point_cloud.append(self.sample_point_clouds_tmp[-2])
-            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>1000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<=1000:
+            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>=1000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<1000:
                 self.sample_point_clouds_from_point_cloud.append(self.sample_point_clouds_tmp[-2])
             self.voxel_down_sample(voxel_size/10)
             tmp_pc = self.sample_point_clouds_tmp[-1]
             voxel_size+=1
+        indices_100k = np.random.choice([i for i in range(0,np.asarray(self.sample_point_clouds_from_point_cloud[0].points).shape[0]-1)],size=100000,replace=False)
+        indices_10k = np.random.choice([i for i in range(0,np.asarray(self.sample_point_clouds_from_point_cloud[1].points).shape[0]-1)],size=10000,replace=False)
+        indices_1k = np.random.choice([i for i in range(0,np.asarray(self.sample_point_clouds_from_point_cloud[2].points).shape[0]-1)],size=1000,replace=False)
+        self.sample_point_clouds_from_point_cloud[0] = self.sample_point_clouds_from_point_cloud[0].select_down_sample(indices_100k)
+        self.sample_point_clouds_from_point_cloud[1] = self.sample_point_clouds_from_point_cloud[1].select_down_sample(indices_10k)
+        self.sample_point_clouds_from_point_cloud[2] = self.sample_point_clouds_from_point_cloud[2].select_down_sample(indices_1k)
+
     
     def voxel_down_sample(self,voxel_size):
         '''
@@ -241,6 +248,7 @@ class RPCDPrepreocess():
             green_print(f'Down sampling from point cloud finished, cost {(datetime.datetime.now()-start).seconds}s')
             logging.info(f'Down sampling from point cloud finished, cost {(datetime.datetime.now()-start).seconds}s')
         except:
+            self.down_sample_to_100k_10k_1k_from_pointcloud()
             red_print('Down sampling error')
             logging.warning("Down sampling error")
         
