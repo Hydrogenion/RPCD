@@ -7,18 +7,28 @@ from utils import *
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', type=str,help='input path')
+    parser.add_argument('-t', type=str,help='type c:clean r:real')
     args = parser.parse_args()
-    path = args.i
-    
+    path = args.i    
+    if(args.t =='r'):
+        _type = 'real'
+    elif(args.t == 'c'):
+        _type = 'clean'
+    else:
+        red_print('Wrong args')
+        exit()
+
     try:
-        raw_point_cloud = o3d.io.read_point_cloud(os.path.join(path,'clean_100k.ply'))
+        raw_point_cloud = o3d.io.read_point_cloud(os.path.join(path,f'{_type}_100k.ply'))
+        green_print(f'Load {_type}_100k.ply')
     except:
-        red_print(f'{os.path.join(path,"clean_100k.ply")} not exists')
+        red_print(f'{os.path.join(path,f"{_type}_100k.ply")} not exists')
         exit
     try:
-        f = open(os.path.join(path,'annotation.txt'),'r',encoding='utf-8')
+        f = open(os.path.join(path,f'{_type}_annotation.txt'),'r',encoding='utf-8')
+        green_print(f'Load {_type}_annotation.ply')
     except:
-        red_print(f'{os.path.join(path,"annotation.txt")} not exists')
+        red_print(f'{os.path.join(path,f"{_type}_annotation.txt")} not exists')
         exit
     seg_pc = []
     data = f.readlines()

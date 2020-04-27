@@ -18,7 +18,8 @@ class RPCDPrepreocess():
         self.reconstructed_mesh = None
         self.segmentation_point_cloud = []
         self.annotation_name = []
-        self.annotation_dict = {}
+        self.annotation_dict_clean = {}
+        self.annotation_dict_real = {}
         self.translate_matrix = None
         logging.basicConfig(filename='./log.txt',datefmt='%Y-%m-%d %H:%M:%S %p',level=logging.DEBUG,format='%(asctime)s-%(message)s')
     
@@ -158,13 +159,15 @@ class RPCDPrepreocess():
     def make_annotation(self):
         for anno_id,(target) in enumerate(self.segmentation_point_cloud):
             vt = self.sample_point_clouds_from_mesh[0].compute_point_cloud_distance(target)
-            indices = []
             for i,(ky) in enumerate(vt):
                 if ky<0.2:
-                    indices.append(i)
-                    self.annotation_dict[i] = anno_id
-            pt = self.sample_point_clouds_from_mesh[0].select_down_sample(indices)
-            # o3d.visualization.draw_geometries([pt])         
+                    self.annotation_dict_clean[i] = anno_id
+        
+        for anno_id,(target) in enumerate(self.segmentation_point_cloud):
+            vt = self.sample_point_clouds_from_point_cloud[0].compute_point_cloud_distance(target)
+            for i,(ky) in enumerate(vt):
+                if ky<0.2:
+                    self.annotation_dict_real[i] = anno_id
            
 
 
@@ -183,10 +186,15 @@ class RPCDPrepreocess():
         o3d.io.write_point_cloud(os.path.join(self.save_path,save_floder_name,'real_1k.ply'),self.sample_point_clouds_from_point_cloud[2])
         o3d.io.write_triangle_mesh(os.path.join(self.save_path,save_floder_name,'mesh.ply'),self.reconstructed_mesh)
 
-        f = open(os.path.join(self.save_path,save_floder_name,'annotation.txt'),'w',encoding='utf-8')		#以'w'方式打开文件
-        for k,v in self.annotation_dict.items():			# 遍历字典中的键值
+        f = open(os.path.join(self.save_path,save_floder_name,'clean_annotation.txt'),'w',encoding='utf-8')		#以'w'方式打开文件
+        for k,v in self.annotation_dict_clean.items():			# 遍历字典中的键值
             f.write(f'{k} {v}\n')	
-        f.close()		
+        f.close()	
+
+        f = open(os.path.join(self.save_path,save_floder_name,'real_annotation.txt'),'w',encoding='utf-8')		#以'w'方式打开文件
+        for k,v in self.annotation_dict_real.items():			# 遍历字典中的键值
+            f.write(f'{k} {v}\n')	
+        f.close()			
 
         self.wirte_info(os.path.join(self.save_path,save_floder_name))
         green_print('Done!')
