@@ -67,7 +67,8 @@ File structure of ```./res```
 
 ### Show annotation
 ```python
-python show_annotation.py -i ./res/2-l
+python show_annotation.py -i ./res/2-l -t c # for clean_100k.ply
+python show_annotation.py -i ./res/2-l -t r # for real_100k.ply
 ```
 
 #### Example for annotation
