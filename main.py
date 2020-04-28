@@ -29,10 +29,18 @@ class RPCDPrepreocess():
                 continue
             file_path = os.path.join(self.folder_path,file)
             ext = file.split('.')[-1]
-            if ext == 'ply':
+            if ext == 'ply' :
                 self.raw_point_cloud = o3d.io.read_point_cloud(file_path)
                 self.translate_matrix = 0 - self.raw_point_cloud.get_center()
-            elif ext =='txt':
+            elif ext =='txt' and file.__contains__('clean'):
+                np_points = np.loadtxt(file_path)
+                pcd = o3d.geometry.PointCloud()
+                pcd.points = o3d.utility.Vector3dVector(np_points[:, 0:3])
+                pcd.colors = o3d.utility.Vector3dVector(np_points[:, 3:6] / 255)
+                pcd.normals = o3d.utility.Vector3dVector(np_points[:,6:9])
+                self.raw_point_cloud = pcd
+                self.translate_matrix = 0 - self.raw_point_cloud.get_center()
+            elif ext =='txt' and not file.__contains__('clean'):
                 np_points = np.loadtxt(file_path)
                 pcd = o3d.geometry.PointCloud()
                 pcd.points = o3d.utility.Vector3dVector(np_points[:,0:3])
