@@ -4,28 +4,35 @@ import multiprocessing as mt
 import os
 import sys
 from utils import *
+import argparse
 
-DATA_DIR = 'res'
-RST_FILE = 'check.csv'
 HELP = """
         程序使用说明
         选中绘图窗口按快捷键：（关闭输入法）
         Q: 下一个
         A: 正常
-        Z: 噪音过多  (通过手工难以剔除)
+        Z: 噪音过多 (手工难以剔除)
         X: 明显孔洞
-        C: 车窗孔洞 
-        V: 明显缺失 
+        C: 车窗孔洞
+        V: 明显缺失
         S: 切换分割视图 (有分割文件才可以)
-        D: 分割标注错误 (若孔洞只出现在分割标注中，则为分割标注错误，而非明孔洞)
-        W: 有离群点 (通过手工可以剔除)
+        D: 分割标注错误 (如果仅是分割有孔洞，原模型没有孔洞，则记为分割标注错误，而非明显孔洞)
+        W: 有离群点 (手工可以剔除)
         space: 切换背景 （绿色背景，更容易看出问题）
         .: 强制中断程序
         """
 
 
 def main():
-    blue_print(HELP)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', type=str,help='result_file',default='res')
+    parser.add_argument('-d', type=str,help='csv file',default='check.csv')
+    args = parser.parse_args()
+
+    DATA_DIR = args.s
+    RST_FILE = args.d
+
+    print(HELP)
     check_files = ['clean_100k.ply', 'real_100k.ply', 'noiseless.ply', 'mesh.ply']
     if not os.path.exists(RST_FILE):
         open(RST_FILE, 'w').close()
@@ -100,7 +107,6 @@ def main():
             rst_file.flush()
 
 
-
 class VisualChecker:
     def __init__(self, pc, seg_pcs: list, rst_notes_set, window_name='open3d', width=960, height=960):
         self.pc = pc
@@ -111,7 +117,6 @@ class VisualChecker:
         self.height = height
         self.bg_white_status = True
         self.show_seg_status = False
-        self.child_process = None
 
         self.key_to_call_back = {
             ord('A'): self.note_good,
@@ -157,8 +162,6 @@ class VisualChecker:
 
     def abort(self, vis):
         print('abort')
-        self.child_process.terminate()
-        self.child_process.join()
         sys.exit(0)
 
     def toggle_seg(self, vis: o3d.visualization.Visualizer):

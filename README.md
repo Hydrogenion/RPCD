@@ -74,3 +74,24 @@ python show_annotation.py -i ./res/2-l -t r # for real_100k.ply
 #### Example for annotation
 
 ![Image](https://github-1253353217.cos.ap-beijing.myqcloud.com/annotations.png)
+
+## Visual Checker
+You can use ```visual_checker.py``` to check your point cloud and mesh.
+```python 
+visual_checker.py -s res -d check.csv
+```
+
+程序使用说明:
+
+        选中绘图窗口按快捷键：（关闭输入法）
+        Q: 下一个
+        A: 正常
+        Z: 噪音过多 (手工难以剔除)
+        X: 明显孔洞
+        C: 车窗孔洞
+        V: 明显缺失
+        S: 切换分割视图 (有分割文件才可以)
+        D: 分割标注错误 (如果仅是分割有孔洞，原模型没有孔洞，则记为分割标注错误，而非明显孔洞)
+        W: 有离群点 (手工可以剔除)
+        space: 切换背景 （绿色背景，更容易看出问题）
+        .: 强制中断程序
