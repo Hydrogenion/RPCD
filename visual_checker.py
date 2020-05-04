@@ -16,8 +16,10 @@ HELP = """
         C: 车窗孔洞
         V: 明显缺失
         S: 切换分割视图 (有分割文件才可以)
-        D: 分割标注错误 (如果仅是分割有孔洞，原模型没有孔洞，则记为分割标注错误，而非明显孔洞)
+        D: 分割标注异常 (如果仅是分割有孔洞，原模型没有孔洞，则记为分割标注异常，而非明显孔洞)
         W: 有离群点 (手工可以剔除)
+        R: 类别不明
+        E: 重建失真
         space: 切换背景 （绿色背景，更容易看出问题）
         .: 强制中断程序
         """
@@ -26,21 +28,21 @@ HELP = """
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', type=str,help='result_file',default='res')
-    parser.add_argument('-d', type=str,help='csv file',default='check.csv')
+    parser.add_argument('-d', type=str,help='csv file',default='check1.csv')
     args = parser.parse_args()
 
     DATA_DIR = args.s
     RST_FILE = args.d
 
-    print(HELP)
-    check_files = ['clean_100k.ply', 'real_100k.ply', 'noiseless.ply', 'mesh.ply']
+    blue_print(HELP)
+    check_files = ['noiseless.ply', 'mesh.ply','clean_100k.ply', 'real_100k.ply']
     if not os.path.exists(RST_FILE):
         open(RST_FILE, 'w').close()
     rst_file = open(RST_FILE, 'r+', encoding="utf-8")
     lines = rst_file.readlines()
     if len(lines) == 0:
         # write head
-        rst_file.write('name, clean_100k.ply, real_100k.ply, noiseless.ply, mesh.ply, comment\n')
+        rst_file.write('name, noiseless.ply, mesh.ply, clean_100k.ply, real_100k.ply, comment\n')
         rst_file.flush()
     existed_names = {line.split(',')[0] for line in lines[1:]}
     print(f"already checked: (cnt:{len(existed_names)})")
@@ -128,7 +130,9 @@ class VisualChecker:
             ord('D'): self.seg_wrong,
             ord(' '): self.change_background_color,
             ord('.'): self.abort,
-            ord('W'): self.note_outliers
+            ord('W'): self.note_outliers,
+            ord('R'): self.misunderstand_category,
+            ord('E'): self.recon_distortion
         }
 
     def run(self):
@@ -199,6 +203,12 @@ class VisualChecker:
     
     def note_outliers(self, vis):
         self.toggle_note('有离群点')
+    
+    def misunderstand_category(self,vis):
+        self.toggle_note('类别不明')
+    
+    def recon_distortion(self,vis):
+        self.toggle_note('重建失真')
 
     def toggle_note(self, note):
         if note in self.rst_notes_set:
