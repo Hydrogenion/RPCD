@@ -28,7 +28,7 @@ HELP = """
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', type=str,help='result_file',default='res')
-    parser.add_argument('-d', type=str,help='csv file',default='check1.csv')
+    parser.add_argument('-d', type=str,help='csv file',default='check.csv')
     args = parser.parse_args()
 
     DATA_DIR = args.s
