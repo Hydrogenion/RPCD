@@ -42,13 +42,14 @@ File structure of ```./res```
 ```
 .
 └── 2-l
-    ├── annotation.txt
+    ├── clean_annotation.txt
     ├── clean_100k.ply
     ├── clean_10k.ply
     ├── clean_1k.ply
     ├── info.txt
     ├── mesh.ply
     ├── noiseless.ply
+    ├── real_annotation.txt
     ├── real_100k.ply
     ├── real_10k.ply
     └── real_1k.ply
@@ -70,7 +71,7 @@ You can download example from https://github-1253353217.cos.ap-beijing.myqcloud.
 ![Image](https://github-1253353217.cos.ap-beijing.myqcloud.com/clean_100k_eg.png)
 
 
-### Show annotation
+### Show annotation 
 ```python
 python show_annotation.py -i ./res/2-l -t c # for clean_100k.ply
 python show_annotation.py -i ./res/2-l -t r # for real_100k.ply
@@ -80,10 +81,10 @@ python show_annotation.py -i ./res/2-l -t r # for real_100k.ply
 
 ![Image](https://github-1253353217.cos.ap-beijing.myqcloud.com/annotations.png)
 
-## Visual Checker
+## Visual Checker (Recommended)
 You can use ```visual_checker.py``` to check your point cloud and mesh.
 ```python 
-visual_checker.py -s res -d check.csv
+python visual_checker.py -s res -d check.csv
 ```
 
 程序使用说明:
@@ -103,3 +104,8 @@ visual_checker.py -s res -d check.csv
         E: 重建失真
         space: 切换背景 （绿色背景，更容易看出问题）
         .: 强制中断程序
+
+Also, you can use GUI version for easy check
+```python 
+python visual_checker_GUI.py -s res -d check.csv
+```
