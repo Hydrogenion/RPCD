@@ -6,6 +6,7 @@ import datetime
 import os 
 import logging
 import argparse
+import traceback
 
 class RPCDPrepreocess():
     def __init__(self,folder_path,save_path):
@@ -21,6 +22,7 @@ class RPCDPrepreocess():
         self.annotation_dict_clean = {}
         self.annotation_dict_real = {}
         self.translate_matrix = None
+        self.raw_point_cloud = None
         logging.basicConfig(filename='./log.txt',datefmt='%Y-%m-%d %H:%M:%S %p',level=logging.DEBUG,format='%(asctime)s-%(message)s')
     
     def load_point_cloud(self):
@@ -29,16 +31,16 @@ class RPCDPrepreocess():
                 continue
             file_path = os.path.join(self.folder_path,file)
             ext = file.split('.')[-1]
-            if ext == 'ply' :
-                self.raw_point_cloud = o3d.io.read_point_cloud(file_path)
-                self.translate_matrix = 0 - self.raw_point_cloud.get_center()
-            elif ext =='txt' and file.__contains__('clean'):
+            if ext =='txt' and file.__contains__('clean'):
                 np_points = np.loadtxt(file_path)
                 pcd = o3d.geometry.PointCloud()
                 pcd.points = o3d.utility.Vector3dVector(np_points[:, 0:3])
                 pcd.colors = o3d.utility.Vector3dVector(np_points[:, 3:6] / 255)
                 pcd.normals = o3d.utility.Vector3dVector(np_points[:,6:9])
                 self.raw_point_cloud = pcd
+                self.translate_matrix = 0 - self.raw_point_cloud.get_center()
+            elif ext == 'ply' and self.raw_point_cloud==None:
+                self.raw_point_cloud = o3d.io.read_point_cloud(file_path)
                 self.translate_matrix = 0 - self.raw_point_cloud.get_center()
             elif ext =='txt' and not file.__contains__('clean'):
                 np_points = np.loadtxt(file_path)
@@ -51,23 +53,35 @@ class RPCDPrepreocess():
         try:
             yellow_print('File:')
             blue_print(self.folder_path)
-        except:
+        except Exception as e:
             red_print('No input file')
+            red_print(traceback.format_exc())
+            red_print(e)
+
         try:
             yellow_print('Raw point cloud:')
             blue_print(self.raw_point_cloud)
-        except:
+        except Exception as e:
             red_print('No raw point cloud')
+            red_print(traceback.format_exc())
+            red_print(e)
+
         try:
             yellow_print('Noiseless point cloud:')
             blue_print(self.noiseless_point_cloud)
-        except:
+        except Exception as e:
             red_print('No raw point cloud')
+            red_print(traceback.format_exc())
+            red_print(e)        
+
         try:
             yellow_print('Reconstructed mesh info:')
             blue_print(self.reconstructed_mesh)
-        except:
+        except Exception as e:
             red_print('No reconstructed mesh')
+            red_print(traceback.format_exc())
+            red_print(e)
+
         yellow_print('Down sample times:')
         blue_print(f'{len(self.sample_point_clouds_from_point_cloud)}')
         for idx,(pc) in enumerate(self.sample_point_clouds_from_point_cloud):
@@ -138,12 +152,12 @@ class RPCDPrepreocess():
         self.voxel_down_sample(1/10)
         self.voxel_down_sample(2/10)
         voxel_size = 2
-        while np.asarray(tmp_pc.points).shape[0]>500:
-            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>=100000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<100000:
+        while np.asarray(tmp_pc.points).shape[0]>500 or len(self.sample_point_clouds_from_point_cloud)<3:
+            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>=100000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<100000 and len(self.sample_point_clouds_from_point_cloud)==0:
                 self.sample_point_clouds_from_point_cloud.append(self.sample_point_clouds_tmp[-2])
-            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>=10000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<10000:
+            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>=10000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<10000 and len(self.sample_point_clouds_from_point_cloud)==1:
                 self.sample_point_clouds_from_point_cloud.append(self.sample_point_clouds_tmp[-2])
-            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>=1000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<1000:
+            if np.asarray(self.sample_point_clouds_tmp[-2].points).shape[0]>=1000 and np.asarray(self.sample_point_clouds_tmp[-1].points).shape[0]<1000 and len(self.sample_point_clouds_from_point_cloud)==2:
                 self.sample_point_clouds_from_point_cloud.append(self.sample_point_clouds_tmp[-2])
             self.voxel_down_sample(voxel_size/10)
             tmp_pc = self.sample_point_clouds_tmp[-1]
@@ -168,16 +182,16 @@ class RPCDPrepreocess():
         for anno_id,(target) in enumerate(self.segmentation_point_cloud):
             vt = self.sample_point_clouds_from_mesh[0].compute_point_cloud_distance(target)
             for i,(ky) in enumerate(vt):
-                if ky<0.2:
+                if ky<0.3:
                     self.annotation_dict_clean[i] = anno_id
         
         for anno_id,(target) in enumerate(self.segmentation_point_cloud):
             vt = self.sample_point_clouds_from_point_cloud[0].compute_point_cloud_distance(target)
             for i,(ky) in enumerate(vt):
-                if ky<0.2:
+                if ky<0.3:
                     self.annotation_dict_real[i] = anno_id
+        # 建议尝试 0.1 0.2 0.3三个标准，以达到最好效果
            
-
 
     def save_ply(self):
         green_print('Saving!')
@@ -230,9 +244,11 @@ class RPCDPrepreocess():
             cost_time =(datetime.datetime.now()-start).seconds
             green_print(f'Remove noise finished, cost {cost_time}s')
             logging.info(f'Remove noise finished, cost {cost_time}s')
-        except:
+        except Exception as e:
             red_print("Remove noise error")
             logging.warning("Remove noise error")
+            red_print(traceback.format_exc())
+            red_print(e)
 
         green_print('Reconstruct mesh')
         logging.info('Reconstruct mesh')
@@ -243,9 +259,12 @@ class RPCDPrepreocess():
             green_print(f'Reconstruct mesh finished, cost {cost_time}s')
             logging.info(f'Reconstruct mesh finished, cost {cost_time}s')
             # o3d.visualization.draw_geometries([self.reconstructed_mesh])
-        except:
+        except Exception as e:
             red_print("Reconstruct mesh error")
             logging.warning("Reconstruct mesh error")
+            red_print(traceback.format_exc())
+            red_print(e)
+
 
         green_print('Down sampling from mesh')
         try:
@@ -253,9 +272,11 @@ class RPCDPrepreocess():
             self.down_sample_to_100k_10k_1k_from_mesh()
             green_print(f'Down sampling from mesh finished, cost {(datetime.datetime.now()-start).seconds}s')
             logging.info(f'Down sampling from mesh finished, cost {(datetime.datetime.now()-start).seconds}s')
-        except:
+        except Exception as e:
             red_print('Down sampling from mesh error')
             logging.warning("Down sampling from mesh error")
+            red_print(traceback.format_exc())
+            red_print(e)
 
         green_print('Down sampling from point cloud')
         try:
@@ -263,29 +284,37 @@ class RPCDPrepreocess():
             self.down_sample_to_100k_10k_1k_from_pointcloud()
             green_print(f'Down sampling from point cloud finished, cost {(datetime.datetime.now()-start).seconds}s')
             logging.info(f'Down sampling from point cloud finished, cost {(datetime.datetime.now()-start).seconds}s')
-        except:
+        except Exception as e:
             red_print('Down sampling error')
             logging.warning("Down sampling error")
+            red_print(traceback.format_exc())
+            red_print(e)
         
         try:
             self.make_annotation()
-        except:
+        except Exception as e:
             red_print('Make annotation error')
             logging.warning("Make annotation error")
+            red_print(traceback.format_exc())
+            red_print(e)
         
         try:
             self.move_to_origin()
-        except:
+        except Exception as e:
             red_print('Move to origin error')
             logging.warning("Move to origin error")
+            red_print(traceback.format_exc())
+            red_print(e)
         
         self.print_info()
 
         try:
             self.save_ply()
-        except:
+        except Exception as e:
             red_print('Save ply error')
             logging.warning("Save ply error")
+            red_print(traceback.format_exc())
+            red_print(e)
 
 def main():
     parser = argparse.ArgumentParser()
